@@ -1,0 +1,35 @@
+import { createClient } from '@/lib/supabase/server'
+import { notFound } from 'next/navigation'
+import ProfileEditor from '@/components/ProfileEditor'
+
+interface PageProps {
+  params: {
+    username: string
+  }
+}
+
+export default async function EditProfilePage({ params }: PageProps) {
+  const supabase = await createClient()
+  const { username } = params
+
+  // Fetch profile by username (allow unpublished profiles in edit mode)
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('username', username)
+    .single()
+
+  if (!profile) {
+    notFound()
+  }
+
+  // Fetch content items
+  const { data: contentItems } = await supabase
+    .from('content_items')
+    .select('*')
+    .eq('profile_id', profile.id)
+    .order('created_at', { ascending: true })
+
+  return <ProfileEditor profile={profile} contentItems={contentItems || []} />
+}
+
