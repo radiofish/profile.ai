@@ -129,11 +129,19 @@ export default function ProfileEditor({ profile: initialProfile, contentItems: i
 
     try {
       // Fetch embed data from Iframely
-      const response = await fetch('/api/iframely', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url }),
-      })
+      let response: Response
+      try {
+        response = await fetch('/api/iframely', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url }),
+        })
+      } catch (fetchError: any) {
+        // Network error or fetch failed
+        console.error('Network error fetching embed:', fetchError)
+        setError('Network error: Could not connect to server. Please check your connection and try again.')
+        return
+      }
 
       if (!response.ok) {
         let errorMessage = `Failed to fetch embed: ${response.status} ${response.statusText}`
@@ -143,19 +151,29 @@ export default function ProfileEditor({ profile: initialProfile, contentItems: i
         } catch {
           // If JSON parsing fails, use the status text
         }
-        throw new Error(errorMessage)
+        setError(errorMessage)
+        return
       }
 
-      const responseData = await response.json()
+      let responseData: any
+      try {
+        responseData = await response.json()
+      } catch (parseError) {
+        console.error('Error parsing response:', parseError)
+        setError('Invalid response from server. Please try again.')
+        return
+      }
 
       if (responseData.error) {
-        throw new Error(responseData.error + (responseData.details ? `: ${responseData.details}` : ''))
+        setError(responseData.error + (responseData.details ? `: ${responseData.details}` : ''))
+        return
       }
 
       const { embedData } = responseData
 
       if (!embedData) {
-        throw new Error('No embed data returned from Iframely API')
+        setError('No embed data returned from Iframely API. The URL may not be supported.')
+        return
       }
 
       // Find the next available position
@@ -179,11 +197,17 @@ export default function ProfileEditor({ profile: initialProfile, contentItems: i
         .select()
         .single()
 
-      if (error) throw error
+      if (error) {
+        console.error('Supabase error:', error)
+        setError(`Database error: ${error.message}`)
+        return
+      }
+
       setContentItems([...contentItems, newItem])
+      setError(null) // Clear any previous errors
     } catch (error: any) {
-      console.error('Error adding content:', error)
-      alert(error.message || 'Failed to add content. Please try again.')
+      console.error('Unexpected error adding content:', error)
+      setError(error.message || 'An unexpected error occurred. Please try again.')
     }
   }
 
@@ -441,6 +465,20 @@ export default function ProfileEditor({ profile: initialProfile, contentItems: i
             Profile URL: /{username || profile.username}
           </p>
         </div>
+
+        {/* Error display for content addition */}
+        {error && (error.includes('embed') || error.includes('content') || error.includes('Network') || error.includes('fetch')) && (
+          <div style={{
+            background: '#fee',
+            color: '#c33',
+            padding: '1rem',
+            borderRadius: '8px',
+            marginBottom: '1.5rem',
+            fontSize: '0.9rem'
+          }}>
+            <strong>Error adding content:</strong> {error}
+          </div>
+        )}
 
         <AdminControls
           onAddContent={handleAddContent}

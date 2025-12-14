@@ -15,15 +15,19 @@ export default function AdminControls({ onAddContent, onPublish, isPublished }: 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    e.stopPropagation() // Prevent any form submission side effects
     if (!url.trim()) return
 
     setLoading(true)
     try {
       await onAddContent(url.trim(), description.trim() || undefined)
+      // Only clear form if no error was set (success case)
+      // The error state is managed in ProfileEditor
       setUrl('')
       setDescription('')
     } catch (error) {
       console.error('Error adding content:', error)
+      // Error is handled in ProfileEditor, don't clear form
     } finally {
       setLoading(false)
     }
