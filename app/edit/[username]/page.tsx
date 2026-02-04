@@ -3,14 +3,14 @@ import { notFound } from 'next/navigation'
 import ProfileEditor from '@/components/ProfileEditor'
 
 interface PageProps {
-  params: {
+  params: Promise<{
     username: string
-  }
+  }>
 }
 
 export default async function EditProfilePage({ params }: PageProps) {
   const supabase = await createClient()
-  const { username } = params
+  const { username } = await params
 
   // Fetch profile by username (allow unpublished profiles in edit mode)
   const { data: profile } = await supabase

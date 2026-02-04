@@ -3,14 +3,14 @@ import { notFound } from 'next/navigation'
 import ProfileView from '@/components/ProfileView'
 
 interface PageProps {
-  params: {
+  params: Promise<{
     username: string
-  }
+  }>
 }
 
 export default async function ProfilePage({ params }: PageProps) {
   const supabase = await createClient()
-  const { username } = params
+  const { username } = await params
 
   // Fetch profile by username
   const { data: profile } = await supabase
