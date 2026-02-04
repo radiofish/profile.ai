@@ -7,3 +7,4 @@ CREATE INDEX IF NOT EXISTS content_items_profile_id_description_idx
 ON content_items(profile_id) 
 WHERE description IS NOT NULL;
 
+

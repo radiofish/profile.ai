@@ -115,3 +115,4 @@ CREATE TRIGGER update_profiles_updated_at BEFORE UPDATE ON profiles
 CREATE TRIGGER update_content_items_updated_at BEFORE UPDATE ON content_items
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+

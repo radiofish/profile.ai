@@ -33,3 +33,4 @@ export default async function EditProfilePage({ params }: PageProps) {
   return <ProfileEditor profile={profile} contentItems={contentItems || []} />
 }
 
+
